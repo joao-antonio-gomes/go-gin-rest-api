@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -66,14 +65,26 @@ func EditStudent(ctx *gin.Context) {
 		return
 	}
 
-	log.Println(&student)
 	if err := ctx.ShouldBindJSON(&student); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"error": err.Error()})
 		return
 	}
 
-	log.Println(&student)
 	database.DB.Model(&student).UpdateColumns(student)
+	ctx.JSON(http.StatusOK, &student)
+}
+
+func SearchStudentByCpf(ctx *gin.Context) {
+	var student models.Student
+	cpf := ctx.Param("cpf")
+
+	database.DB.Where(&models.Student{CPF: cpf}).First(&student)
+
+	if student.ID == 0 {
+		ctx.JSON(http.StatusNotFound, gin.H{"error": "Student not found!"})
+		return
+	}
+
 	ctx.JSON(http.StatusOK, &student)
 }
