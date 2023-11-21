@@ -1,6 +1,24 @@
 version: '3'
 
 services:
+    app:
+        build:
+            dockerfile: Dockerfile
+            context: ./
+        volumes:
+            - ./:/app
+        environment:
+            - PORT=8080
+            - DB_HOST=postgres
+            - DB_PORT=5435
+            - DB_USER=postgres
+            - DB_PASSWORD=postgres
+            - DB_NAME=go-gin
+        ports:
+            - 8080:8080
+        depends_on:
+            - postgres
+
     postgres:
         image: 'postgres'
         environment:
