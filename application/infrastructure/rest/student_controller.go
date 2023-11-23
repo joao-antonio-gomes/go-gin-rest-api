@@ -1,21 +1,32 @@
-package controllers
+package rest
 
 import (
+	"github.com/joao-antonio-gomes/go-gin-rest-api/application/domain/student/entity"
+	"github.com/joao-antonio-gomes/go-gin-rest-api/application/usecase"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 	"github.com/joao-antonio-gomes/go-gin-rest-api/database"
-	"github.com/joao-antonio-gomes/go-gin-rest-api/models"
 )
 
+type StudentController struct {
+	studentUseCase *usecase.StudentUseCase
+}
+
+var singletonStudentController *StudentController
+
+func NewStudentController(studentUseCase *usecase.StudentUseCase) *StudentController {
+	singletonStudentController = &StudentController{studentUseCase: studentUseCase}
+	return singletonStudentController
+}
+
 func ShowAllStudents(ctx *gin.Context) {
-	var students []models.Student
-	database.DB.Find(&students)
-	ctx.JSON(http.StatusOK, &students)
+	all, _ := singletonStudentController.studentUseCase.FindAll()
+	ctx.JSON(http.StatusOK, all)
 }
 
 func ShowStudent(ctx *gin.Context) {
-	var student models.Student
+	var student entity.Student
 	id := ctx.Params.ByName("id")
 	database.DB.First(&student, id)
 
@@ -28,9 +39,15 @@ func ShowStudent(ctx *gin.Context) {
 }
 
 func CreateStudent(ctx *gin.Context) {
-	var student models.Student
+	var student entity.Student
 
 	if err := ctx.ShouldBindJSON(&student); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"error": err.Error()})
+		return
+	}
+
+	if err := entity.ValidateStudent(&student); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"error": err.Error()})
 		return
@@ -41,7 +58,7 @@ func CreateStudent(ctx *gin.Context) {
 }
 
 func DeleteStudent(ctx *gin.Context) {
-	var student models.Student
+	var student entity.Student
 	id := ctx.Params.ByName("id")
 	database.DB.First(&student, id)
 
@@ -55,7 +72,7 @@ func DeleteStudent(ctx *gin.Context) {
 }
 
 func EditStudent(ctx *gin.Context) {
-	var student models.Student
+	var student entity.Student
 
 	id := ctx.Params.ByName("id")
 	database.DB.First(&student, id)
@@ -71,15 +88,21 @@ func EditStudent(ctx *gin.Context) {
 		return
 	}
 
+	if err := entity.ValidateStudent(&student); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"error": err.Error()})
+		return
+	}
+
 	database.DB.Model(&student).UpdateColumns(student)
 	ctx.JSON(http.StatusOK, &student)
 }
 
 func SearchStudentByCpf(ctx *gin.Context) {
-	var student models.Student
+	var student entity.Student
 	cpf := ctx.Param("cpf")
 
-	database.DB.Where(&models.Student{CPF: cpf}).First(&student)
+	database.DB.Where(&entity.Student{CPF: cpf}).First(&student)
 
 	if student.ID == 0 {
 		ctx.JSON(http.StatusNotFound, gin.H{"error": "Student not found!"})

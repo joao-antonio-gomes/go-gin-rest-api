@@ -2,20 +2,18 @@ package routes
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/joao-antonio-gomes/go-gin-rest-api/controllers"
+	"github.com/joao-antonio-gomes/go-gin-rest-api/application/infrastructure/rest"
 )
 
 func HandleRequests() {
 	r := gin.Default()
 
-	r.GET("/students", controllers.ShowAllStudents)
-	r.GET("/students/:id", controllers.ShowStudent)
-	r.GET("/students/cpf/:cpf", controllers.SearchStudentByCpf)
-	r.POST("/students", controllers.CreateStudent)
-	r.DELETE("/students/:id", controllers.DeleteStudent)
-	r.PATCH("/students/:id", controllers.EditStudent)
-
-	r.GET("/:name", controllers.Greetings)
+	r.GET("api/students", rest.ShowAllStudents)
+	r.GET("api/students/:id", rest.ShowStudent)
+	r.GET("api/students/cpf/:cpf", rest.SearchStudentByCpf)
+	r.POST("api/students", rest.CreateStudent)
+	r.DELETE("api/students/:id", rest.DeleteStudent)
+	r.PATCH("api/students/:id", rest.EditStudent)
 
 	r.Run()
 }
